@@ -34,9 +34,8 @@ def matches_text(matrix, row, col, text, direction):
     if is_out_of_bounds(matrix, row, col) or matrix[row][col] != text[0]:
         return False
 
-    row, col = get_next_cell(row, col, direction)
-
     # recursive call to match substring in same direction
+    row, col = get_next_cell(row, col, direction)
     return matches_text(matrix, row, col, text[1:], direction)
 
 
@@ -53,35 +52,28 @@ def part1_count_matches(matrix, text):
 
 
 def part2_count_matches(matrix):
-    # going to for a left diagonal and right diagonal for each position in matrix
-    # and check that it matches these 
-    to_match_1 = ['S', 'A', 'M']
-    to_match_2 = ['M', 'A', 'S']
+    # approach is to form a left diagonal and right diagonal at each index of the matrix
+    # and check that value of the diagonal matches one of these
+    to_match = [["S", "A", "M"], ["M", "A", "S"]]
 
-    matrix_depth, matrix_width = len(matrix[0]), len(matrix)
+    def do_diagonals_at_coordinate_match(matrix, row, col):
+        # get coordinates of the diagonals
+        diag_right = [ get_next_cell(row, col, "up_right"), (row, col), get_next_cell(row, col, "down_left") ]
+        diag_left = [ get_next_cell(row, col, "up_left"), (row, col), get_next_cell(row, col, "down_right") ]
 
-    count = 0
-    for mid_row, mid_col in product(range(matrix_depth), range(matrix_width)):
-        # get diagonal cell positions around middle cell
-        up_left_row,  up_left_col = get_next_cell(mid_row, mid_col, "up_left")
-        down_right_row, down_right_col = get_next_cell(mid_row, mid_col, "down_right")
-        up_right_row,  up_right_col = get_next_cell(mid_row, mid_col, "up_right")
-        down_left_row, down_left_col = get_next_cell(mid_row, mid_col, "down_left")
+        # skip if any diagonal coordinates are out of bounds
+        if any(is_out_of_bounds(matrix, *coord) for coord in diag_right + diag_left):
+            return False
 
-        # if part of diagonal out of bounds, continue
-        if is_out_of_bounds(matrix, up_left_row, up_left_col) or \
-            is_out_of_bounds(matrix, down_right_row, down_right_col) or\
-            is_out_of_bounds(matrix, up_right_row, up_right_col) or \
-            is_out_of_bounds(matrix, down_left_row, down_left_col):
-            continue
+        # map coordinates to actual values and check they match
+        diag_right_vals = [matrix[row][col] for row,col in diag_right]
+        diag_left_vals = [matrix[row][col] for row,col in diag_left]
 
-        x_left_slant = [matrix[up_left_row][up_left_col], matrix[mid_row][mid_col], matrix[down_right_row][down_right_col]]
-        y_left_slant = [matrix[down_left_row][down_left_col], matrix[mid_row][mid_col], matrix[up_right_row][up_right_col]]
+        return diag_right_vals in to_match and diag_left_vals in to_match
 
-        if (x_left_slant == to_match_1 or x_left_slant == to_match_2) and (y_left_slant == to_match_1 or y_left_slant == to_match_2):
-            count += 1
 
-    return count
+    return sum(1 for row, col in product(range(len(matrix[0])), range(len(matrix)))
+                if do_diagonals_at_coordinate_match(matrix, row, col))
 
 
 if __name__ == "__main__":
@@ -103,7 +95,7 @@ if __name__ == "__main__":
 
     print(part1_count_matches(matrix, "XMAS"))
 
-    # # smaller test matrix - expect output of 18
+    # smaller test matrix - expect output of 9
     # matrix = [
     #     ['.', 'M', '.', 'S', '.', '.', '.', '.', '.', '.'],
     #     ['.', '.', 'A', '.', '.', 'M', 'S', 'M', 'S', '.'],
