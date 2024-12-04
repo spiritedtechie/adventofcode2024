@@ -1,8 +1,10 @@
 from itertools import product
 
+
 def read_file(filename):
     with open(filename) as file:
         return [list(line.rstrip()) for line in file]
+
 
 adjacent_deltas = {
     "up_left": (-1, -1),
@@ -12,12 +14,14 @@ adjacent_deltas = {
     "down_right": (+1, +1),
     "down": (+1, 0),
     "left": (0, -1),
-    "right": (0, +1)
+    "right": (0, +1),
 }
+
 
 def get_next_cell(row, col, direction):
     delta_row, delta_col = adjacent_deltas[direction]
     return row + delta_row, col + delta_col
+
 
 def is_out_of_bounds(matrix, row, col):
     return not (0 <= row < len(matrix) and 0 <= col < len(matrix[0]))
@@ -26,7 +30,7 @@ def is_out_of_bounds(matrix, row, col):
 def matches_text(matrix, row, col, text, direction):
     if not text:
         return True
-    
+
     if is_out_of_bounds(matrix, row, col) or matrix[row][col] != text[0]:
         return False
 
@@ -41,7 +45,9 @@ def part1_count_matches(matrix, text):
 
     count = 0
     for row, col in product(range(matrix_depth), range(matrix_width)):
-        count += sum(1 for direction in adjacent_deltas if matches_text(matrix, row, col, text, direction))
+        count += sum(1 for direction in adjacent_deltas
+            if matches_text(matrix, row, col, text, direction)
+        )
 
     return count
 
@@ -96,7 +102,6 @@ if __name__ == "__main__":
     # ]
 
     print(part1_count_matches(matrix, "XMAS"))
-
 
     # # smaller test matrix - expect output of 18
     # matrix = [
