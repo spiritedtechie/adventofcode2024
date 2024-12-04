@@ -36,12 +36,44 @@ def matches_text(matrix, row, col, text, direction):
     return matches_text(matrix, row, col, text[1:], direction)
 
 
-def count_matches(matrix, text):
+def part1_count_matches(matrix, text):
     matrix_depth, matrix_width = len(matrix[0]), len(matrix)
 
     count = 0
     for row, col in product(range(matrix_depth), range(matrix_width)):
         count += sum(1 for direction in adjacent_deltas if matches_text(matrix, row, col, text, direction))
+
+    return count
+
+
+def part2_count_matches(matrix):
+    # going to for a left diagonal and right diagonal for each position in matrix
+    # and check that it matches these 
+    to_match_1 = ['S', 'A', 'M']
+    to_match_2 = ['M', 'A', 'S']
+
+    matrix_depth, matrix_width = len(matrix[0]), len(matrix)
+
+    count = 0
+    for mid_row, mid_col in product(range(matrix_depth), range(matrix_width)):
+        # get diagonal cell positions around middle cell
+        up_left_row,  up_left_col = get_next_cell(mid_row, mid_col, "up_left")
+        down_right_row, down_right_col = get_next_cell(mid_row, mid_col, "down_right")
+        up_right_row,  up_right_col = get_next_cell(mid_row, mid_col, "up_right")
+        down_left_row, down_left_col = get_next_cell(mid_row, mid_col, "down_left")
+
+        # if part of diagonal out of bounds, continue
+        if is_out_of_bounds(matrix, up_left_row, up_left_col) or \
+            is_out_of_bounds(matrix, down_right_row, down_right_col) or\
+            is_out_of_bounds(matrix, up_right_row, up_right_col) or \
+            is_out_of_bounds(matrix, down_left_row, down_left_col):
+            continue
+
+        x_left_slant = [matrix[up_left_row][up_left_col], matrix[mid_row][mid_col], matrix[down_right_row][down_right_col]]
+        y_left_slant = [matrix[down_left_row][down_left_col], matrix[mid_row][mid_col], matrix[up_right_row][up_right_col]]
+
+        if (x_left_slant == to_match_1 or x_left_slant == to_match_2) and (y_left_slant == to_match_1 or y_left_slant == to_match_2):
+            count += 1
 
     return count
 
@@ -63,4 +95,20 @@ if __name__ == "__main__":
     #     ['M', 'X', 'M', 'X', 'A', 'X', 'M', 'A', 'S', 'X']
     # ]
 
-    print(count_matches(matrix, "XMAS"))
+    print(part1_count_matches(matrix, "XMAS"))
+
+
+    # # smaller test matrix - expect output of 18
+    # matrix = [
+    #     ['.', 'M', '.', 'S', '.', '.', '.', '.', '.', '.'],
+    #     ['.', '.', 'A', '.', '.', 'M', 'S', 'M', 'S', '.'],
+    #     ['.', 'M', '.', 'S', '.', 'M', 'A', 'A', '.', '.'],
+    #     ['.', '.', 'A', '.', 'A', 'S', 'M', 'S', 'M', '.'],
+    #     ['.', 'M', '.', 'S', '.', 'M', '.', '.', '.', '.'],
+    #     ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+    #     ['S', '.', 'S', '.', 'S', '.', 'S', '.', 'S', '.'],
+    #     ['.', 'A', '.', 'A', '.', 'A', '.', 'A', '.', '.'],
+    #     ['M', '.', 'M', '.', 'M', '.', 'M', '.', 'M', '.'],
+    #     ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
+    # ]
+    print(part2_count_matches(matrix))
