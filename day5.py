@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import cmp_to_key
 
 
 def is_correctly_ordered(before_rules, index, nums_list) -> bool:
@@ -17,21 +18,42 @@ def is_correctly_ordered(before_rules, index, nums_list) -> bool:
     return is_correctly_ordered(before_rules, index + 1, nums_list)
 
 
-if __name__ == "__main__":
-    with open("day5_updates.txt") as file:
-        updates = [list(map(int, line.rstrip().split(","))) for line in file]
-
-    # inverted index for fast O(n) lookup
-    before_rules = defaultdict(set)
-    with open("day5_rules.txt") as file:
-        for line in file:
-            left, right = map(int, line.rstrip().split("|"))
-            before_rules[right].add(left)
-
+def part_1(updates, before_rules):
     total = sum(
         update[len(update) // 2]
         for update in updates
         if is_correctly_ordered(before_rules, 0, update)
     )
 
-    print(total)
+    print("part 1", total)
+
+
+def part_2(updates, before_rules):
+    total = 0
+    for update in updates:
+        if not is_correctly_ordered(before_rules, 0, update):
+            # sort update
+            sorted_update = sorted(update, 
+                key=cmp_to_key(lambda i1, i2: -1 if i1 in before_rules[i2] else 0 )
+            )
+            # add middle to total
+            total += sorted_update[len(sorted_update) // 2]
+    
+    print("part 2", total)
+
+
+if __name__ == "__main__":
+    with open("day5_updates.txt") as file:
+        updates = [list(map(int, line.rstrip().split(","))) for line in file]
+
+    # inverted index for fast O(n) lookup
+    # 
+    before_rules = defaultdict(set)
+    with open("day5_rules.txt") as file:
+        for line in file:
+            left, right = map(int, line.rstrip().split("|"))
+            before_rules[right].add(left)
+
+    part_1(updates, before_rules)
+    part_2(updates, before_rules)
+
