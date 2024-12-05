@@ -42,17 +42,22 @@ def part_2(updates, before_rules):
     print("part 2", total)
 
 
-if __name__ == "__main__":
+def parse_input():
     with open("day5_updates.txt") as file:
         updates = [list(map(int, line.rstrip().split(","))) for line in file]
 
     # inverted index for fast O(n) lookup
-    # 
+    # represent a set of numbers that come BEFORE the keyed number
     before_rules = defaultdict(set)
     with open("day5_rules.txt") as file:
         for line in file:
             left, right = map(int, line.rstrip().split("|"))
             before_rules[right].add(left)
+
+    return updates, before_rules
+
+if __name__ == "__main__":
+    updates, before_rules = parse_input()
 
     part_1(updates, before_rules)
     part_2(updates, before_rules)
