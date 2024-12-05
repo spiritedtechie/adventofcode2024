@@ -1,36 +1,37 @@
 from collections import defaultdict
 
-def read_file(filename):
-    with open(filename) as file:
-        return [line.rstrip().split(',') for line in file]
-    
+
+def is_correctly_ordered(before_rules, index, nums_list) -> bool:
+    # empty list of beyond end of list
+    if len(nums_list) == 0 or index == len(nums_list):
+        return True
+
+    # for a non-zero index, check previous value is before current
+    if index != 0:
+        item = nums_list[index]
+        prev_item = nums_list[index - 1]
+        if prev_item not in before_rules[item]:
+            return False
+
+    # recurse and check the next position
+    return is_correctly_ordered(before_rules, index + 1, nums_list)
+
 
 if __name__ == "__main__":
-    rules = read_file("day5_rules.txt")
-    updates = read_file("day5_updates.txt")
+    with open("day5_updates.txt") as file:
+        updates = [list(map(int, line.rstrip().split(","))) for line in file]
 
-    # index 
-    afters = defaultdict(set)
-    # inverted index
-    befores = defaultdict(set)
-
+    # inverted index for fast O(n) lookup
+    before_rules = defaultdict(set)
     with open("day5_rules.txt") as file:
         for line in file:
-            tokens = line.rstrip().split("|")
-            afters[tokens[0]].add(tokens[1])
-            befores[tokens[1]].add(tokens[0])
+            left, right = map(int, line.rstrip().split("|"))
+            before_rules[right].add(left)
 
-    def is_before(item, rest) -> bool:
-        if not rest:
-            return True
-        
-        prev_item = int(item)
-        item = int(item)
-        next_item = int(rest[0])
+    total = sum(
+        update[len(update) // 2]
+        for update in updates
+        if is_correctly_ordered(before_rules, 0, update)
+    )
 
-        if next_item in afters(item) and item:
-            is_before(next_item, rest[1:])
-
-        
-    
-    print(updates)
+    print(total)
