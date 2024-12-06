@@ -3,7 +3,7 @@ from functools import cmp_to_key
 
 
 def is_correctly_ordered(before_rules, index, nums_list) -> bool:
-    # empty list of beyond end of list
+    # empty list or beyond end of list
     if len(nums_list) == 0 or index == len(nums_list):
         return True
 
@@ -46,7 +46,7 @@ def parse_input():
     with open("day5_updates.txt") as file:
         updates = [list(map(int, line.rstrip().split(","))) for line in file]
 
-    # inverted index for fast O(n) lookup
+    # inverted index for fast O(1) lookup
     # represent a set of numbers that come BEFORE the keyed number
     before_rules = defaultdict(set)
     with open("day5_rules.txt") as file:
