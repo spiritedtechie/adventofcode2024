@@ -13,8 +13,18 @@ direction_deltas = {"<": (0, -1), "^": (-1, 0), ">": (0, +1), "V": (+1, 0)}
 next_direction = {"<": "^", "^": ">", ">": "V", "V": "<"}
 
 
+def find_starting_position(matrix):
+    starting_pos, starting_dir = None, None
+    for row, col in product(range(len(matrix)), range(len(matrix[0]))):
+        if matrix[row][col] in direction_deltas.keys():
+            starting_dir = matrix[row][col]
+            starting_pos = (row, col)
+    return starting_pos, starting_dir
+
+
 def is_out_of_bounds(matrix, row, col):
     return not (0 <= row < len(matrix) and 0 <= col < len(matrix[0]))
+
 
 #  At present assumes there is no infinite loop i.e. we eventually exit the grid
 def make_move(matrix, visited, cur_pos, cur_direction):
@@ -29,7 +39,10 @@ def make_move(matrix, visited, cur_pos, cur_direction):
     delta_row, delta_col = direction_deltas[cur_direction]
     next_row, next_col = cur_row + delta_row, cur_col + delta_col
 
-    if not is_out_of_bounds(matrix, next_row, next_col) and matrix[next_row][next_col] == "#":
+    if (
+        not is_out_of_bounds(matrix, next_row, next_col)
+        and matrix[next_row][next_col] == "#"
+    ):
         # change direction and repeat
         new_direction = next_direction[cur_direction]
         return make_move(matrix, visited, (cur_row, cur_col), new_direction)
@@ -38,15 +51,16 @@ def make_move(matrix, visited, cur_pos, cur_direction):
         return make_move(matrix, visited, (next_row, next_col), cur_direction)
 
 
-if __name__ == "__main__":
-    matrix = read_file("day6.txt")
-
-    starting_pos, starting_dir = None, None
-    for row, col in product(range(len(matrix)), range(len(matrix[0]))):
-        if matrix[row][col] in direction_deltas.keys():
-            starting_dir = matrix[row][col]
-            starting_pos = (row, col)
+def part_1():
+    starting_pos, starting_dir = find_starting_position(matrix)
 
     visited_positions = set()
     make_move(matrix, visited_positions, starting_pos, starting_dir)
+    
     print("part 1:", len(visited_positions))
+
+
+if __name__ == "__main__":
+    matrix = read_file("day6.txt")
+
+    part_1()
