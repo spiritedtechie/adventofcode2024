@@ -16,8 +16,8 @@ next_direction = {"<": "^", "^": ">", ">": "V", "V": "<"}
 def is_out_of_bounds(matrix, row, col):
     return not (0 <= row < len(matrix) and 0 <= col < len(matrix[0]))
 
-
-def rec(matrix, visited, cur_pos, cur_direction):
+#  At present assumes there is no infinite loop i.e. we eventually exit the grid
+def make_move(matrix, visited, cur_pos, cur_direction):
 
     if is_out_of_bounds(matrix, *cur_pos):
         return
@@ -32,10 +32,10 @@ def rec(matrix, visited, cur_pos, cur_direction):
     if not is_out_of_bounds(matrix, next_row, next_col) and matrix[next_row][next_col] == "#":
         # change direction and repeat
         new_direction = next_direction[cur_direction]
-        return rec(matrix, visited, (cur_row, cur_col), new_direction)
+        return make_move(matrix, visited, (cur_row, cur_col), new_direction)
     else:
         # repeat for next position in same direction
-        return rec(matrix, visited, (next_row, next_col), cur_direction)
+        return make_move(matrix, visited, (next_row, next_col), cur_direction)
 
 
 if __name__ == "__main__":
@@ -47,6 +47,6 @@ if __name__ == "__main__":
             starting_dir = matrix[row][col]
             starting_pos = (row, col)
 
-    visited = set()
-    rec(matrix, visited, starting_pos, starting_dir)
-    print("part 1:", len(visited))
+    visited_positions = set()
+    make_move(matrix, visited_positions, starting_pos, starting_dir)
+    print("part 1:", len(visited_positions))
