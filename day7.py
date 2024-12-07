@@ -3,13 +3,11 @@ from collections import deque
 
 def read_file(filename):
     with open(filename) as file:
-        result = []
-        for line in file:
-            test_value_str, numbers_str = line.split(": ")
-            test_value = int(test_value_str)
-            numbers_tuple = tuple(map(int, numbers_str.split()))
-            result.append((test_value, numbers_tuple))
-    return result
+        return [
+            (int(test_value), tuple(map(int, numbers_str.split())))
+            for line in file
+            for test_value, numbers_str in [line.split(": ")]
+        ]
 
 
 def is_equation_possible(expected, nums: tuple, op_applicator_func) -> bool:
