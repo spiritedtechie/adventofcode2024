@@ -12,31 +12,50 @@ def read_file(filename):
     return result
 
 
-def can_evaluate_to_expected(expected, nums: tuple) -> bool:
+def is_equation_possible(expected, nums: tuple, op_applicator_func) -> bool:
     # best option for O(1) appends to beginning
-    queue = deque()
-    queue.appendleft(nums[0])
+    queue = deque([nums[0]])
 
     for cur_idx in range(1, len(nums)):
         for _ in range(len(queue)):
             prev = queue.pop()
-            next_1, next_2 = prev + nums[cur_idx], prev * nums[cur_idx]
+            next_calculated: list = op_applicator_func(prev, nums[cur_idx])
 
-            if expected in [next_1, next_2]:
+            if cur_idx == len(nums) - 1 and expected in next_calculated:
                 return True
 
-            queue.appendleft(next_1)
-            queue.appendleft(next_2)
+            queue.extendleft(next_calculated)
 
     return False
 
 
+def part_1_op_applicator(lhs: int, rhs: int):
+    return [lhs + rhs, lhs * rhs]
+
+
+def part_2_op_applicator(lhs: int, rhs: int):
+    return part_1_op_applicator(lhs, rhs) + [int(str(lhs) + str(rhs))]
+
+
+def part_1(lines):
+    total_sum = sum(
+        line[0]
+        for line in lines
+        if is_equation_possible(line[0], line[1], part_1_op_applicator)
+    )
+    print("part 1:", total_sum)
+
+
+def part_2(lines):
+    total_sum = sum(
+        line[0]
+        for line in lines
+        if is_equation_possible(line[0], line[1], part_2_op_applicator)
+    )
+    print("part 2:", total_sum)
+
+
 if __name__ == "__main__":
     lines = read_file("day7.txt")
-    total_sum = sum(
-        [line[0] for line in lines if can_evaluate_to_expected(line[0], line[1])]
-    )
-    print(total_sum)
-
-
-# 5030892084481
+    part_1(lines)
+    part_2(lines)
