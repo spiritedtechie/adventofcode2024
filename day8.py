@@ -14,52 +14,53 @@ def is_out_of_bounds(matrix, row, col):
     return not (0 <= row < len(matrix) and 0 <= col < len(matrix[0]))
 
 
-def part_1_find_antinodes(
-    matrix, cur_row, cur_col, previous_antennas
-) -> set[tuple[int, int]]:
+def delta(pos1: tuple[int, int], pos2: tuple[int, int], negate=False):
+    delta_row, delta_col = -(pos1[0] - pos2[0]), -(pos1[1] - pos2[1])
+    return (-delta_row, -delta_col) if negate else (delta_row, delta_col)
+
+
+def transverse_line(pos: tuple[int, int], delta: tuple[int, int]):
+    return (pos[0] + delta[0], pos[1] + delta[1])
+
+
+def part_1_find_antinodes(matrix, antenna_pos, prev_antennas) -> set[tuple[int, int]]:
     # calculate valid antinode positions based on relation to all previous antennas
     antinodes = set()
 
-    for prev_row, prev_col in previous_antennas:
-        delta_row, delta_col = -(cur_row - prev_row), -(cur_col - prev_col)
-
-        # possible antinode positions in both directions
-        anti_pos_1 = (prev_row + delta_row, prev_col + delta_col)
-        anti_pos_2 = (cur_row - delta_row, cur_col - delta_col)
-
-        if not is_out_of_bounds(matrix, *anti_pos_1):
-            antinodes.add(anti_pos_1)
-
-        if not is_out_of_bounds(matrix, *anti_pos_2):
-            antinodes.add(anti_pos_2)
+    for prev in prev_antennas:
+        # possible antinode positions
+        antinodes.update(
+            pos
+            for pos in [
+                transverse_line(prev, delta(antenna_pos, prev)),
+                transverse_line(antenna_pos, delta(antenna_pos, prev, negate=True)),
+            ]
+            if not is_out_of_bounds(matrix, *pos)
+        )
 
     return antinodes
 
 
-def part_2_find_antinodes(
-    matrix, cur_row, cur_col, previous_antennas
-) -> set[tuple[int, int]]:
+def part_2_find_antinodes(matrix, antenna_pos, prev_antennas) -> set[tuple[int, int]]:
     # calculate valid antinode positions based on relation to all previous antennas
     antinodes = set()
 
-    for prev_row, prev_col in previous_antennas:
+    for prev in prev_antennas:
         # Antennas themselves are antinodes
-        antinodes.add((prev_row, prev_col))
-        antinodes.add((cur_row, cur_col))
+        antinodes.add(prev)
+        antinodes.add(antenna_pos)
 
-        delta_row, delta_col = -(cur_row - prev_row), -(cur_col - prev_col)
+        # Loop deltas from prev
+        anti_pos = transverse_line(prev, delta(antenna_pos, prev))
+        while not is_out_of_bounds(matrix, *anti_pos):
+            antinodes.add(anti_pos)
+            anti_pos = transverse_line(anti_pos, delta(antenna_pos, prev))
 
-        # Loop deltas forward along the line from prev to current
-        anti_row, anti_col = prev_row + delta_row, prev_col + delta_col
-        while not is_out_of_bounds(matrix, anti_row, anti_col):
-            antinodes.add((anti_row, anti_col))
-            anti_row, anti_col = anti_row + delta_row, anti_col + delta_col
-
-        # Loop deltas forward along the line from curr to previous
-        anti_row, anti_col = cur_row - delta_row, cur_col - delta_col
-        while not is_out_of_bounds(matrix, anti_row, anti_col):
-            antinodes.add((anti_row, anti_col))
-            anti_row, anti_col = anti_row - delta_row, anti_col - delta_col
+        # Loop deltas from current
+        anti_pos = transverse_line(antenna_pos, delta(antenna_pos, prev, negate=True))
+        while not is_out_of_bounds(matrix, *anti_pos):
+            antinodes.add(anti_pos)
+            anti_pos = transverse_line(anti_pos, delta(antenna_pos, prev, negate=True))
 
     return antinodes
 
@@ -74,7 +75,7 @@ def run(matrix, find_func):
         # find antinodes against previous antennas of same frequency
         if re.fullmatch(ANTENNA_MATCH_REGEX, cur_val):
             antinodes.update(
-                find_func(matrix, cur_row, cur_col, prev_antennas[cur_val])
+                find_func(matrix, (cur_row, cur_col), prev_antennas[cur_val])
             )
             prev_antennas[cur_val].add((cur_row, cur_col))
 
