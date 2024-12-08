@@ -20,45 +20,36 @@ def delta(pos1: tuple[int, int], pos2: tuple[int, int], negate=False):
 
 
 def transverse_line(pos: tuple[int, int], delta: tuple[int, int]):
-    return (pos[0] + delta[0], pos[1] + delta[1])
+    return pos[0] + delta[0], pos[1] + delta[1]
 
 
 def part_1_find_antinodes(matrix, antenna_pos, prev_antennas) -> set[tuple[int, int]]:
     # calculate valid antinode positions based on relation to all previous antennas
-    antinodes = set()
-
-    for prev in prev_antennas:
-        # possible antinode positions
-        antinodes.update(
-            pos
-            for pos in [
-                transverse_line(prev, delta(antenna_pos, prev)),
-                transverse_line(antenna_pos, delta(antenna_pos, prev, negate=True)),
-            ]
-            if not is_out_of_bounds(matrix, *pos)
-        )
-
-    return antinodes
+    return {
+        pos
+        for prev in prev_antennas
+        for pos in [
+            transverse_line(prev, delta(antenna_pos, prev)),
+            transverse_line(antenna_pos, delta(antenna_pos, prev, negate=True)),
+        ]
+        if not is_out_of_bounds(matrix, *pos)
+    }
 
 
 def part_2_find_antinodes(matrix, antenna_pos, prev_antennas) -> set[tuple[int, int]]:
     def antinodes_from(pos, dir_delta):
-        antinodes = set()
-        anti_pos = transverse_line(pos, dir_delta)
-        while not is_out_of_bounds(matrix, *anti_pos):
-            antinodes.add(anti_pos)
-            anti_pos = transverse_line(anti_pos, dir_delta)
-        return antinodes
+        while not is_out_of_bounds(matrix, *pos):
+            yield pos
+            pos = transverse_line(pos, dir_delta)
 
     antinodes = set()
     for prev in prev_antennas:
-        # Antennas themselves are antinodes
-        antinodes.add(prev)
-        antinodes.add(antenna_pos)
-        # Loop deltas from prev
+        # transverse from and including prev
         antinodes.update(antinodes_from(prev, delta(antenna_pos, prev)))
-        # Loop deltas from current
-        antinodes.update(antinodes_from(antenna_pos, delta(antenna_pos, prev, negate=True)))
+        # transverse from and including current
+        antinodes.update(
+            antinodes_from(antenna_pos, delta(antenna_pos, prev, negate=True))
+        )
 
     return antinodes
 
