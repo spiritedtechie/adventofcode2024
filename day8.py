@@ -42,25 +42,23 @@ def part_1_find_antinodes(matrix, antenna_pos, prev_antennas) -> set[tuple[int, 
 
 
 def part_2_find_antinodes(matrix, antenna_pos, prev_antennas) -> set[tuple[int, int]]:
-    # calculate valid antinode positions based on relation to all previous antennas
-    antinodes = set()
+    def antinodes_from(pos, dir_delta):
+        antinodes = set()
+        anti_pos = transverse_line(pos, dir_delta)
+        while not is_out_of_bounds(matrix, *anti_pos):
+            antinodes.add(anti_pos)
+            anti_pos = transverse_line(anti_pos, dir_delta)
+        return antinodes
 
+    antinodes = set()
     for prev in prev_antennas:
         # Antennas themselves are antinodes
         antinodes.add(prev)
         antinodes.add(antenna_pos)
-
         # Loop deltas from prev
-        anti_pos = transverse_line(prev, delta(antenna_pos, prev))
-        while not is_out_of_bounds(matrix, *anti_pos):
-            antinodes.add(anti_pos)
-            anti_pos = transverse_line(anti_pos, delta(antenna_pos, prev))
-
+        antinodes.update(antinodes_from(prev, delta(antenna_pos, prev)))
         # Loop deltas from current
-        anti_pos = transverse_line(antenna_pos, delta(antenna_pos, prev, negate=True))
-        while not is_out_of_bounds(matrix, *anti_pos):
-            antinodes.add(anti_pos)
-            anti_pos = transverse_line(anti_pos, delta(antenna_pos, prev, negate=True))
+        antinodes.update(antinodes_from(antenna_pos, delta(antenna_pos, prev, negate=True)))
 
     return antinodes
 
