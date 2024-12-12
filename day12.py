@@ -33,6 +33,7 @@ def get_corners(grid, r, c):
     return sum(1 for rule in add_corner_rules if rule(r, c))
 
 
+# get metrics for a region starting at row r, col c and recursing through the region
 def dfs(grid, r, c, visited):
     visited.add((r, c))
     area = 1
@@ -52,6 +53,7 @@ def dfs(grid, r, c, visited):
     return area, perimeter, corners
 
 
+# process each region by finding a start point and depth-first transversing it
 def calculate(grid, calc_perimeter=True):
     visited = set()
     total_cost = 0
