@@ -55,6 +55,24 @@ def fast_calculate_for_machine(machine_data):
     return 0, 0
 
 
+# Read about Cramers rule for solving linear equations
+# and it seemed like the fastest and easiest method in the end
+def cramers_rule_calculate_for_machine(machine_data):
+    (Xa, Ya), (Xb, Yb), (Xp, Yp) = machine_data
+
+    A = (Xa * Yb) - (Ya * Xb)
+    A1 = (Xp * Yb) - (Yp * Xb)
+    A2 = (Xa * Yp) - (Ya * Xp)
+
+    a = A1 / A
+    b = A2 / A
+
+    if a % 1 == 0 and b % 1 == 0:
+        return int(a), int(b)
+
+    return 0, 0
+
+
 def calculate(machines, alg_func):
     return sum(3 * a + b for machine in machines for a, b in [alg_func(machine)])
 
@@ -65,3 +83,6 @@ machines_complex = parse_file("day13.txt", target_add=10000000000000)
 
 print("part_1:", calculate(machines, calculate_for_machine))
 print("part_2:", calculate(machines_complex, fast_calculate_for_machine))
+print(
+    "part_2 (cramers):", calculate(machines_complex, cramers_rule_calculate_for_machine)
+)
