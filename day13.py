@@ -1,4 +1,6 @@
 import re
+from itertools import product
+
 
 pattern = re.compile(
     r"Button A: X([+-]\d+), Y([+-]\d+)\s*"
@@ -28,10 +30,9 @@ def parse_file(filename, target_add=0):
 def calculate_for_machine(machine_data):
     (Xa, Ya), (Xb, Yb), (Xp, Yp) = machine_data
 
-    for a in range(1, 101):
-        for b in range(1, 101):
-            if Xa * a + Xb * b == Xp and Ya * a + Yb * b == Yp:
-                return a, b
+    for a, b in product(range(1, 101), range(1, 101)):
+        if Xa * a + Xb * b == Xp and Ya * a + Yb * b == Yp:
+            return a, b
 
     return 0, 0
 
