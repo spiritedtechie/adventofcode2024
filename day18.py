@@ -1,24 +1,26 @@
 import heapq
 
+DIRECTIONS = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+
 
 def read_file(filename):
-    coordinates = []
     with open(filename, "r") as f:
-        for line in f.readlines():
-            c, r = line.strip().split(",")
-            coordinates.append((int(r), int(c)))
-    return coordinates
+        return [
+            (int(r), int(c))
+            for c, r in (line.strip().split(",") for line in f.readlines())
+        ]
 
 
-DIRECTIONS = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+def create_empty_grid(grid_size):
+    return [["."] * grid_size for _ in range(grid_size)]
 
 
 def grid_to_string(grid):
     return "\n".join("".join(row) for row in grid)
 
 
-def is_out_of_bounds(matrix, row, col):
-    return not (0 <= row < len(matrix) and 0 <= col < len(matrix[0]))
+def is_out_of_bounds(grid, row, col):
+    return not (0 <= row < len(grid) and 0 <= col < len(grid[0]))
 
 
 def get_neighbours(grid, r, c):
@@ -31,6 +33,8 @@ def get_neighbours(grid, r, c):
     return neighbours
 
 
+# Once again a priority queue keeps track of the lowest scoring
+# path, and prioritises exploring that path. O(log n) for heap push and pop.
 def walk_space(grid, start_position, end_position):
     start_r, start_c = start_position
     end_r, end_c = end_position
@@ -60,18 +64,42 @@ def walk_space(grid, start_position, end_position):
     return -1
 
 
+def part_1(grid, byte_coordinates, bytes_to_drop):
+    start_coord = (0, 0)
+    end_coord = (grid_size - 1, grid_size - 1)
+
+    for r, c in byte_coordinates[:bytes_to_drop]:
+        grid[r][c] = "#"
+
+    result = walk_space(grid, start_coord, end_coord)
+    print("part 1", result)
+
+
+def part_2(grid, byte_coordinates):
+    start_coord = (0, 0)
+    end_coord = (grid_size - 1, grid_size - 1)
+
+    # This is brute force, but is fast enough for the example
+    # I may come back to this to improve it when I have time
+    for r, c in byte_coordinates:
+        grid[r][c] = "#"
+
+        result = walk_space(grid, start_coord, end_coord)
+
+        if result == -1:
+            print("part 2:", (c, r))
+            break
+
+
 # Main
 coordinates = read_file("day18.txt")
 
+# Part 1
 grid_size = 71
-grid = [["."] * grid_size for _ in range(grid_size)]
+grid = create_empty_grid(grid_size)
+part_1(grid, coordinates, 1024)
 
-to_drop = 1024
-for r, c in coordinates[:to_drop]:
-    grid[r][c] = "#"
-
-start_coord = (0, 0)
-end_coord = (grid_size - 1, grid_size - 1)
-
-result = walk_space(grid, start_coord, end_coord)
-print("part 1", result)
+# part 2
+grid_size = 71
+grid = create_empty_grid(grid_size)
+part_2(grid, coordinates)
