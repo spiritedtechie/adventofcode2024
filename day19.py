@@ -1,3 +1,5 @@
+from itertools import product
+
 def read_file(filename):
     with open(filename, "r") as f:
         patterns = f.readline().strip().split(", ")
@@ -8,15 +10,13 @@ def read_file(filename):
 
 
 def ways_to_make_design(design, patterns):
-
     # Each position in the design and the number of ways to 'reach' it
     counts = [0] * (len(design) + 1)
     counts[0] = 1
 
-    for i in range(1, len(design) + 1):
-        for pattern in patterns:
-            if len(pattern) <= i and design[i - len(pattern) : i] == pattern:
-                counts[i] += counts[i - len(pattern)]
+    for i, pattern in product(range(1, len(design) + 1), patterns):
+        if len(pattern) <= i and design[i - len(pattern) : i] == pattern:
+            counts[i] += counts[i - len(pattern)]
 
     # ways to reach last position in design
     return counts[-1]
