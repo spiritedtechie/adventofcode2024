@@ -1,6 +1,8 @@
 import heapq
 from itertools import *
 from functools import cache
+import timeit
+
 
 # Keypad entries and adjacent neighbours (and direction to get to them)
 NUMERIC_KEYPAD = {
@@ -25,6 +27,8 @@ DIRECTIONAL_KEYPAD = {
     "A": [("^", "<"), (">", "v")],
 }
 
+KEYPADS = [NUMERIC_KEYPAD, DIRECTIONAL_KEYPAD]
+
 
 def read_file(filename):
     with open(filename) as file:
@@ -37,7 +41,9 @@ def read_file(filename):
 #
 # A priority queue ensures only the shortest paths are explored
 # and captured/returned from the function.
-def bfs_shortest_sequences(keypad, start, end) -> list[str]:
+@cache
+def bfs_shortest_sequences(keypad_idx, start, end) -> list[str]:
+    keypad = KEYPADS[keypad_idx]
     queue = [(0, start, "")]
     visited = set()
     shortest_seqs = []
@@ -70,13 +76,13 @@ def bfs_shortest_sequences(keypad, start, end) -> list[str]:
 # depths of tree (levels of control).
 @cache
 def dfs_shortest_seq(sequence, level_of_control, first_level=True):
-    keypad = NUMERIC_KEYPAD if first_level else DIRECTIONAL_KEYPAD
-    sequence = "A" + sequence # starting on new keypad so append A
+    keypad_idx = 0 if first_level else 1
+    sequence = "A" + sequence  # starting on new keypad so append A
 
     # Base case: if at level 0 (leaf of tree)
     if level_of_control == 0:
         return sum(
-            min(len(seq) for seq in bfs_shortest_sequences(keypad, start, end))
+            min(len(seq) for seq in bfs_shortest_sequences(keypad_idx, start, end))
             for start, end in pairwise(sequence)
         )
 
@@ -84,7 +90,7 @@ def dfs_shortest_seq(sequence, level_of_control, first_level=True):
     return sum(
         min(
             dfs_shortest_seq(seq, level_of_control - 1, False)
-            for seq in bfs_shortest_sequences(keypad, start, end)
+            for seq in bfs_shortest_sequences(keypad_idx, start, end)
         )
         for start, end in pairwise(sequence)
     )
@@ -93,10 +99,14 @@ def dfs_shortest_seq(sequence, level_of_control, first_level=True):
 # Main
 numeric_codes = read_file("day21.txt")
 
+# Part 1
 part_1_result = sum(dfs_shortest_seq(code, 2) * int(code[:3]) for code in numeric_codes)
 print("part 1:", part_1_result)
 
-part_2_result = sum(
-    dfs_shortest_seq(code, 25) * int(code[:3]) for code in numeric_codes
+# Part 2
+part_2 = lambda: print(
+    "part 2:", sum(dfs_shortest_seq(code, 25) * int(code[:3]) for code in numeric_codes)
 )
-print("part 2:", part_2_result)
+timer = timeit.Timer(part_2)
+elapsed = timer.timeit(1)
+print(f"Time taken: {elapsed:.6f} seconds\n")
