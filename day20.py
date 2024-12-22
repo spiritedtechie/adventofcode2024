@@ -11,23 +11,23 @@ def read_file(filename):
         return [list(line.strip()) for line in file]
 
 
-def grid_to_string(grid):
+def grid_to_string(grid) -> str:
     return "\n".join("".join(row) for row in grid)
 
 
-def find_start(grid):
-    start = None
+def manhattan_distance(from_pos: tuple[int, int], to_pos: tuple[int, int]) -> int:
+    return abs(from_pos[0] - to_pos[0]) + abs(from_pos[1] - to_pos[1])
+
+
+def find_start(grid) -> tuple[int, int]:
     for r, c in product(range(len(grid)), range(len(grid[0]))):
         if grid[r][c] == "S":
-            start = r, c
-
-    if not start:
-        raise Exception("start or end not found")
-
-    return start
+            return r, c
+    raise ValueError("start position not found")
 
 
-def get_neighbours(grid, r, c):
+# Valid neighbours of a cell that are not out of bounds
+def get_neighbours(grid, r, c) -> list[tuple[int, int]]:
     return [
         (r + dr, c + dc)
         for dr, dc in DIRECTIONS
@@ -35,45 +35,46 @@ def get_neighbours(grid, r, c):
     ]
 
 
-# assumption is there is one path from start to end, as detailed in requirement
-def walk_path(grid, start):
-    visited = set()
-    path_costs = defaultdict(lambda: 0)
-    path_costs[start] = 0  # start position has zero cost
-    queue = deque([(start, 0)])
+# Find the path by walking it.
+# Assumption is there is one path from start to end (as detailed in requirement).
+# This simplifies the walking of it i.e. no need to find the shortest path.
+def walk_path(grid, start) -> list[tuple[int, int]]:
+    ordered_path = [start]
+    queue = deque([start])
+    visited = set([start])
 
     while queue:
-        (curr_r, curr_c), curr_cost = queue.pop()
-
-        if (curr_r, curr_c) in visited:
-            continue
-        visited.add((curr_r, curr_c))
+        curr_r, curr_c = queue.pop()
 
         for nr, nc in get_neighbours(grid, curr_r, curr_c):
             if grid[nr][nc] in [".", "E"] and (nr, nc) not in visited:
-                path_costs[(nr, nc)] = curr_cost + 1
-                queue.appendleft(((nr, nc), curr_cost + 1))
+                visited.add((curr_r, curr_c))
+                ordered_path.append((nr, nc))
+                queue.appendleft((nr, nc))
 
-    return path_costs
+    return ordered_path
 
 
-def find_cheats(grid, wall_positions, path_costs, minimum_cost_saving):
-    savings = defaultdict(list)
+def find_cheats(path, minimum_cost_saving=100, max_cheat_length=2):
+    savings = defaultdict(int)
 
-    for r, c in wall_positions:
-        # get wall neighbours that are on the path
-        adj_path_positions = {
-            (ad_r, ad_c)
-            for ad_r, ad_c in get_neighbours(grid, r, c)
-            if grid[ad_r][ad_c] in [".", "E", "S"]
-        }
+    # for each position on the path i.e. where we can start cheating from
+    for start_pos_idx, start_pos in enumerate(path):
+        # no point exploring path beyond the required saving
+        if len(path) - start_pos_idx <= minimum_cost_saving:
+            break
 
-        # compare every path position adjacent to wall to see if it meet minimum cost saving
-        for p1, p2 in product(adj_path_positions, adj_path_positions):
-            if p1 != p2:
-                p_cost_diff = path_costs[p1] - path_costs[p2] - 2
-                if p_cost_diff >= minimum_cost_saving:
-                    savings[p_cost_diff].append((r, c))
+        # compare with other points on path that we can cheat to
+        # that give minimum required cost saving
+        for end_pos_idx in range(start_pos_idx + minimum_cost_saving, len(path)):
+            end_pos = path[end_pos_idx]
+            distance = manhattan_distance(start_pos, end_pos)
+
+            # ensure the cheat length and minimum saving are met
+            if distance <= max_cheat_length:
+                saving = end_pos_idx - start_pos_idx - distance
+                if saving >= minimum_cost_saving:
+                    savings[saving] += 1
 
     return savings
 
@@ -81,13 +82,14 @@ def find_cheats(grid, wall_positions, path_costs, minimum_cost_saving):
 # Main
 grid = read_file("day20.txt")
 start = find_start(grid)
-path_costs = walk_path(grid, start)
-wall_positions = {
-    (r, c)
-    for r, c in product(range(len(grid)), range(len(grid[0])))
-    if grid[r][c] == "#"
-}
-cheats = find_cheats(grid, wall_positions, path_costs, minimum_cost_saving=100)
+path = walk_path(grid, start)
 
-total_cheats = sum(len(cheat_positions) for saving, cheat_positions in cheats.items())
+# part 1
+savings = find_cheats(path, max_cheat_length=2)
+total_cheats = sum(savings.values())
 print("part 1:", total_cheats)
+
+# part 2
+savings = find_cheats(path, max_cheat_length=20)
+total_cheats = sum(savings.values())
+print("part 2:", total_cheats)
