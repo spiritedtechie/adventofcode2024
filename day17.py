@@ -29,8 +29,7 @@ def compute(r_a, r_b, r_c, program):
 
     pointer = 0
     while pointer < len(program) - 1:
-        op_code = program[pointer]
-        operand = program[pointer + 1]
+        op_code, operand = program[pointer], program[pointer + 1]
 
         match op_code:
             case 0:
@@ -55,29 +54,47 @@ def compute(r_a, r_b, r_c, program):
     return r_a, r_b, r_c, output
 
 
+# The easiest way to understand this is to enable the print statements.
+#
+# Basically each digit in the output can only be 0 to 7 for this computer's logic. As 'a' grows
+# the length of the list grows as each digit position is filled from 0-7.
+# Using this knowledge, we can control (greatly reduce) the range of 'a' to explore to build up a
+# complete match of the program.
+#
+# As we increase 'a', we are trying to match every growing slice of the program from the end.
+# As we match a slice, we increase our value of 'a' accordingly to match the next slice (and so on),
+# until we have matched the full program.
+def find_min_a_to_output_program(program, a, i) -> int:
+    _, _, _, output = compute(a, 0, 0, program)
+
+    # base case - found match
+    if output == program:
+        # print(f"full match: a={a}, program={program}, output={output}")
+        return a
+
+    if output == program[-i:] or i == 0:
+        # print(f"partial match: a={a}, program={program[-i:]}, output={output}")
+        for n in range(8):
+            # print("new a", 8 * a + n)
+            result = find_min_a_to_output_program(program, 8 * a + n, i + 1)
+            if result:
+                return result
+    return None
+
+
+def part_1(registers, program):
+    r_a = int(registers["A"])
+    r_b = int(registers["B"])
+    r_c = int(registers["C"])
+    _, _, _, output = compute(r_a, r_b, r_c, program)
+    print("part 1:", output)
+
+
+def part_2(registers, program):
+    print("part 2", find_min_a_to_output_program(program, a=0, i=0))
+
+
 # Main
 registers, program = parse_file("day17.txt")
-
-# Part 1
-r_a = int(registers["A"])
-r_b = int(registers["B"])
-r_c = int(registers["C"])
-r_a, r_b, r_c, output = compute(r_a, r_b, r_c, program)
-print("part 1:", output)
-
-
-# # Part 2
-# r_a = 43980465111040
-# r_b = 0
-# r_c = 0
-# while r_a != 0:
-#     _, _, _, output = execute(r_a, r_b, r_c, program)
-#     print(r_a, r_b, r_c, output)
-
-#     if output == program:
-#         print(r_a, output)
-
-#     import time
-#     time.sleep(0.5)
-
-#     r_a += 1
+part_1(registers, program)
+part_2(registers, program)
